@@ -26,6 +26,6 @@ typedef struct Serialmanager
     int flag;
     int fd;
 }Serialmanager;
-
+extern void serial_close(Serialmanager* manager);
 extern int serial_init(Serialconfig* config,Serialmanager* manager);
 #endif

@@ -12,7 +12,7 @@
 const char* gpiodev="/dev/gpiochip0";
 struct gpiod_line *line;
 struct gpiod_chip* gpio1;
-
+unsigned char rx_data[64],tx_data[64]="";
 
 int main(int agrc,char* agrv)
 {
@@ -21,7 +21,30 @@ int main(int agrc,char* agrv)
     Serialmanager manger;
     gpio1=gpiod_chip_open(gpiodev);
     line=gpiod_chip_get_line(gpio1,gpiolin);
+
+
     fd=serial_init(&config,&manger);
-    close(fd);
+
+    usleep(100*1000);
+    if(serial_pthread_start(&manger)!=0)
+    {
+        printf("pthread create fail\n");
+        return 0;
+    }
+    while(strcmp(tx_data,"stop\n")!=0)
+    {
+        
+        if(fgets(tx_data,sizeof(tx_data),stdin)==NULL)
+        {
+            printf("scanf error\n");
+            return 0;
+        }
+        ring_buffer_write(&manger.tx_buff,tx_data,64);
+        usleep(100*1000);
+        ring_buffer_read(&manger.rx_buff,rx_data,64,100);
+        printf("%s\n",rx_data);
+    }
+    usleep(100*1000);
+    serial_close(&manger);
     return 0;
 }
